@@ -1,0 +1,22 @@
+{
+  "sauce" : {
+    "username": "process.env.SAUCE_USER",
+    "accessKey": "process.env.SAUCE_KEY",
+    "logfile": "sauce_connect.log",
+    "tunnelIdentifier": null,
+    "fastFailRexegps": null,
+    "directDomains": null,
+    "verbose": true
+  },
+  "print" : {
+    "colors": {
+      "info": "grey",
+      "debug": "green",
+      "warning": "yellow",
+      "error": "red",
+      "notice": "white"
+    },
+    "padding": 30,
+    "width": 14
+  }
+}

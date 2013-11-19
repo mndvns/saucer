@@ -1,0 +1,76 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var program = require('commander');
+var saucer = require('..');
+var path = require('path');
+var join = path.join;
+var fs = require('fs');
+var exists = fs.existsSync;
+var spawn = require('win-fork');
+
+// usage
+
+program
+  .version(require('../package').version)
+  .usage('<command> [options]')
+
+// sub-command help
+
+program.on('--help', function() {
+  console.log('  Commands:');
+  console.log();
+  console.log('    install [flag ...]      install java dependencies');
+  console.log('    connect [flag ...]      connect to selenium server');
+  console.log();
+  process.exit();
+});
+
+// parse argv
+
+program.parse(process.argv);
+
+// args void of cmds
+
+var args = process.argv.slice(3);
+
+// command
+
+var cmd = program.args[0];
+
+// help
+
+if (!cmd) program.help();
+
+// executable
+
+var bin = 'saucer-' + cmd;
+
+// resolve executable path
+
+var local = join(__dirname, bin);
+if (exists(local)) bin = local;
+
+// display `saucer` help if executable doesn't exist
+
+if (!exists(bin)) {
+  console.error('%s is not a command', bin)
+  program.help();
+}
+
+// padding
+
+console.log();
+
+// spawn
+
+var proc = spawn(bin, args, { stdio: 'inherit', customFds: [0, 1, 2] });
+
+// call it a day
+
+proc.on('close', function(code){
+  process.exit(code);
+});

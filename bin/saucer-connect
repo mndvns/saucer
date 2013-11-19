@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var program = require('commander');
+var spawn = require('win-fork');
+var extend = require('xtend');
+var fs = require('fs');
+var saucer = require('..');
+var out = saucer.out;
+var search = saucer.search;
+var paths = saucer.paths;
+var type = require('../lib/utils').type;
+
+// options
+
+program
+  .usage('[flag ...]')
+  .option('-c, --config <path>', 'load local config file')
+  .option('-d, --debug', 'enable verbose debugging')
+  .option('-f, --readyfile <file>', 'file to be touched when tunnel is ready')
+  .option('-l, --logfile <file>')
+  .option('-p, --proxy <host ...>', 'proxy host and port for relaying')
+  .option('-s, --shared [name ...]', 'let subaccounts use the tunnel')
+  .option('-P, --port <port>', 'port number to bind tunnel');
+
+// arguments
+
+program.parse(process.argv);
+var args = program.args;
+
+// load config file
+
+var conf = paths.loadConfig(program.config);
+
+// check that credentials are present
+
+var user = conf.sauce.username || process.env.SAUCE_USER;
+var key = conf.sauce.accessKey || process.env.SAUCE_KEY;
+
+if (!user) out('error'.red, 'No Sauce username found. Please set it at SAUCE_USER');
+if (!key ) out('error'.red, 'No Sauce access key found. Please set it at SAUCE_KEY');
+if (!user || !key) return;
+
+// create the base arguments of our connect command
+
+var request = ["-jar", paths.jarfile, user, key ];
+
+// extend config options with passed-in options
+// (passed-in win)
+
+program.options.map(function(opt) {
+  var optName = opt.long.slice(2);
+
+  // see if the option is enabled
+  // if so, push it on the request as is
+
+  type(program[optName]) !== 'undefined'
+    ? request.push(opt.long, program[optName])
+    : null;
+})
+
+// TODO
+// find a way for `mocha` to follow spawn processes
+if (process.env.NODE_ENV === 'test') return out('finishing early');
+
+out('connecting', 'Spinning up Sauce Connect');
+
+saucer.watchLog(function() {
+  out('connecting','Watching ' + saucer.config.sauce.logfile + ' for updates');
+});
+
+// spin up Sauce Connect
+
+var proc = spawn('java', request, {stdio: 'pipe'});
+
+// and handle closing it
+
+proc.on('close', function(code) {
+  process.exit(code);
+});
+
+proc.on('exit', function(code, signal) {
+
+  // java exits with a code of 143 on SIGTERM
+  if (code === 143) return;
+
+  out('quiting', 'bye for now');
+
+  // TODO
+  // i should probably get more detailed with these error codes
+  var msg = 'closing this tunnel';
+  if (code > 0) return out('error', 'could not start sauce connect. exit code ' + code);
+  return out(msg);
+})
+

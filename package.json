@@ -1,0 +1,39 @@
+{
+  "name": "saucer-js",
+  "version": "0.1.0",
+  "description": "Selenium test runner",
+  "main": "index",
+  "bin": {
+    "saucer": "bin/saucer",
+    "saucer-install": "bin/saucer-install",
+    "saucer-connect": "bin/saucer-connect"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mvanasse/saucer"
+  },
+  "keywords": [
+    "selenium",
+    "testing"
+  ],
+  "author": "Michael Vanasse",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mvanasse/saucer"
+  },
+  "dependencies": {
+    "lig": "~0.1.0",
+    "xtend": "~2.1.1",
+    "monocle": "~1.1.51",
+    "protractor": "~0.12.1",
+    "commander": "~2.0.0",
+    "win-fork": "~1.1.1",
+    "adm-zip": "~0.4.3",
+    "progress": "~1.1.2"
+  },
+  "devDependencies": {
+    "should": "~2.1.0",
+    "mocha": "~1.14.0",
+    "istanbul": "~0.1.45"
+  }
+}

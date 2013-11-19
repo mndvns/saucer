@@ -1,0 +1,130 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var program = require('commander');
+var fs = require('fs');
+var path = require('path');
+var http = require('http');
+var AdmZip = require("adm-zip");
+var Progress = require('progress')
+var saucer = require('..');
+var out = saucer.out;
+var join = path.join;
+var resolve = path.resolve;
+
+// options
+
+program
+  .usage('[flag ...]')
+  .option('-c, --config <path>', 'load local config file')
+  .option('-f, --force', 'overwrite current installation');
+
+// arguments
+
+program.parse(process.argv);
+var args = program.args;
+
+out('intializing', 'loading config file');
+
+// identify our installation files
+
+var zipfile = saucer.paths.zipfile;
+var jarfile = saucer.paths.jarfile;
+
+// check to make sure if we've installed already
+
+if (fs.existsSync(jarfile) && !program.force)
+  return out({style: 'yellow'}, 'warning',
+             'a jar file exists already',
+             'use `--force` to overwrite it',
+             'exiting...');
+
+out('attempting to connect with saucelabs')
+var req = { host: 'saucelabs.com', port: 80,
+            path: '/downloads/Sauce-Connect-latest.zip' };
+
+// TODO
+// find a better way to get this done
+if (process.env.NODE_ENV === 'test') {
+  req = { host: 'getbootstrap.com', port: 80,
+          path: '/2.3.2/assets/bootstrap.zip' };
+}
+// establish connection
+
+http.get(req, function(res) {
+  out('receiving data\n');
+
+  // get the specs on the file
+
+  var data = [], dataLen = 0;
+  var len = parseInt(res.headers['content-length'], 10)
+
+  // initialize a new progress bar
+  // and fill that baby up
+
+  var barDownload = new Bar(len)
+  res.on('data', function(chunk) {
+    data.push(chunk);
+    dataLen += chunk.length;
+    barDownload.tick(chunk.length);
+
+  }).on('end', function() {
+    console.log('');
+    out('unpacking zip')
+    console.log();
+
+    // initialize another progress bar and buffer
+
+    var barZip = new Bar(dataLen)
+    var buf = new Buffer(dataLen);
+
+    // increment buf and bar with a super
+    // awesome for-loop
+
+    for (var i = 0, l = data.length, pos = 0; i < l; i ++) {
+      data[i].copy(buf, pos);
+      pos += data[i].length;
+      barZip.tick(data[i].length);
+    }
+
+    // extract the zip to our file
+
+    var zip = new AdmZip(buf);
+    zip.extractAllTo(join(__dirname, 'vendor'), true);
+  });
+});
+
+// send off to `saucer-connect`
+// or `saucer-run` or something
+
+process.on('exit', function() {
+  console.log();
+  out('success', 'installation complete');
+
+  // cleanup
+
+  if (fs.existsSync(zipfile)) fs.unlinkSync(zipfile);
+});
+
+/**
+ * Create a progress bar.
+ *
+ * @param {String} width
+ */
+
+function Bar(width) {
+  var conf = saucer.config.log;
+  var margin = conf.width + conf.padding + 2;
+  var pad = new Array(margin).join(' ')
+  var args = pad + '[:bar] :percent :etas';
+  var options = {
+    complete: '=',
+    incomplete: ' ',
+    total: width,
+    width: Math.floor(50, process.stdout.columns / 3 - margin)
+  };
+  return new Progress(args, options);
+}
