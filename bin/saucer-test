@@ -58,10 +58,17 @@ function protractor(port) {
   browsers.forEach(function(browser) {
     var args = ['--browser', browser, '--address', address, '-p', selport++];
     if (program.local) args.push('--local');
-    spawn(bin, args, { stdio: 'inherit', customFds: [0, 1, 2] })
-      .on('close', function(code) {
-        end(browser, code);
-      });
+    var proc = spawn(bin, args, { stdio: 'pipe', customFds: [0, 1, 2] });
+
+    proc.on('close', function(code) {
+      end(browser, code);
+    });
+    proc.stdout.on('data', function(d) {
+      process.stdout.write(('' + d).replace(process.env.SAUCE_ACCESS_KEY, '****'));
+    });
+    proc.stderr.on('data', function(d) {
+      process.stdout.write('' + d);
+    });
   });
 };
 
@@ -74,10 +81,10 @@ function exec(cmd, args) {
     process.exit(code);
   });
   proc.stdout.on('data', function(d) {
-    console.log('' + d);
+    process.stdout.write(('' + d).replace(process.env.SAUCE_ACCESS_KEY, '****'));
   });
   proc.stderr.on('data', function(d) {
-    console.log('' + d);
+    process.stdout.write('' + d);
   });
   proc.next = function(fn) {
     proc.on('close', fn);
