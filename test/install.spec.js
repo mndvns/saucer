@@ -22,4 +22,3 @@ describe('saucer install', function() {
     })
   })
 })
-

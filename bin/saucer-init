@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var program = require('commander');
+var fs = require('fs');
+var path = require('path');
+var os = require('os');
+var out = require('..').out;
+
+program
+  .option('-u, --user', 'sauce labs username')
+  .option('-k, --key', 'sauce labs access key')
+
+// end-of-line code
+
+var eol = os.EOL;
+
+var user = program.user || '';
+var key = program.key || '';
+
+var output = [
+  'module.exports = {',
+  '  sauceUser: \'' + user  + '\',',
+  '  sauceKey: \'' + key  + '\',',
+  '  capabilities: {',
+  '    browserName: \'internet explorer\',',
+  '    platform: \'Windows 7\',',
+  '    version: \'9\'',
+  '  },',
+  '  specs: [\'tests/main.spec.js\'],',
+  '};'
+].join(eol);
+
+var file = path.resolve(process.cwd(), 'saucer.js');
+fs.writeFileSync(file, output, 'utf8');
+
+out('created', file);

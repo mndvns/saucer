@@ -2,7 +2,7 @@
 var conf = require('../saucer.json')
 var Log = require('../lib/log')(conf.log)
 
-describe('log', function() {
+describe.skip('log', function() {
   it('should print standard messages', function() {
     console.log();
     Log.out('testing', 'that the logger can print').join(' ')

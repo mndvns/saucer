@@ -58,12 +58,23 @@ if (exists(local)) bin = local;
 
 if (!exists(bin)) {
   console.error('%s is not a command', bin)
-  program.help();
+  process.exit(1);
 }
 
 // padding
 
 console.log();
+
+// we don't want saucer to be run in the parent folder,
+// so we make it impossible to do so
+
+var relative = path.relative(__dirname, process.cwd())
+var distance = relative.replace(/[^\.]/g, '').length / 2 - 2
+
+// only allow the test directory to execute `saucer`
+
+var testDir = ~~relative.indexOf('test');
+if (!testDir && !distance) return console.error('don\'t run saucer in the root directory');
 
 // spawn
 

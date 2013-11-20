@@ -9,6 +9,11 @@ node_modules:
 bin/vendor/Sauce-Connect.jar: node_modules
 	@saucer install
 
+watch:
+	@NODE_ENV=test  \
+		./node_modules/.bin/mocha  \
+		--watch
+
 clean:
 	@rm -rf bin/vendor node_modules
 
