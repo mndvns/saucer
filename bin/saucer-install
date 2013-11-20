@@ -27,8 +27,6 @@ program
 program.parse(process.argv);
 var args = program.args;
 
-out('intializing', 'loading config file');
-
 // identify our installation files
 
 var zipfile = saucer.paths.zipfile;
@@ -36,11 +34,7 @@ var jarfile = saucer.paths.jarfile;
 
 // check to make sure if we've installed already
 
-if (fs.existsSync(jarfile) && !program.force)
-  return out({style: 'yellow'}, 'warning',
-             'a jar file exists already',
-             'use `--force` to overwrite it',
-             'exiting...');
+if (fs.existsSync(jarfile) && !program.force) return;
 
 out('attempting to connect with saucelabs')
 var req = { host: 'saucelabs.com', port: 80,

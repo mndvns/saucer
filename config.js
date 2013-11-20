@@ -1,16 +1,4 @@
 module.exports = {
-  protractor: {
-    chromeDriver: './selenium/chromedriver',
-    seleniumArgs: [],
-    baseUrl: '',
-    jasmineNodeOpts: {
-      onComplete: null,
-      isVerbose: true,
-      showColors: true,
-      includeStackTrace: true,
-      defaultTimeoutInterval: 10000
-    }
-  },
   sauce: {
     logfile: 'sauce_connect.log',
     tunnelIdentifier: '',

@@ -32,22 +32,10 @@ program
 program.parse(process.argv);
 var args = program.args;
 
-// load config file
-
-var userDir = path.resolve(process.cwd(), program.config || 'saucer.js')
-if (!fs.existsSync(userDir)) return out({style: 'red'}, 'error',
-                                         'No config file in current directory.',
-                                         'Use `saucer connect --config` to point',
-                                         'to it, or run `saucer init` to initialize',
-                                         'one in this directory.\n');
-
-var userConf = require(userDir);
-config.protractor = extend(config.protractor, userConf.protractor);
-
 // check that credentials are present
 
-var user = config.protractor.sauceUsername || process.env.SAUCE_USERNAME;
-var key = config.protractor.sauceAccessKey || process.env.SAUCE_ACCESS_KEY;
+var user = process.env.SAUCE_USERNAME;
+var key = process.env.SAUCE_ACCESS_KEY;
 
 if (!user) out('error'.red, 'No Sauce username found. Please set it at SAUCE_USERNAME');
 if (!key ) out('error'.red, 'No Sauce access key found. Please set it at SAUCE_ACCESS_KEY');
