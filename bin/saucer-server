@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var program = require('commander');
+var out = require('..').out;
+var server = require('../lib/server');
+var spawn = require('child_process').spawn;
+
+program
+  .option('-p, --port <port>', 'port for server', 5555)
+  .option('-H, --headless', 'run server without opening a browser');
+program.parse(process.argv);
+
+// TODO 
+
+var app = server();
+
+app.listen(program.port, function() {
+  var url = 'http://localhost:' + program.port;
+  out('server', 'listening on ' + url);
+  if (program.headless) return;
+  spawn('open', [url]);
+});
