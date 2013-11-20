@@ -11,6 +11,8 @@ var protractor = require('protractor');
 var runner = require('protractor/lib/runner');
 var spawn = require('win-fork');
 var fs = require('fs');
+var write = fs.writeFile;
+var mkdirp = require('mkdirp');
 
 program
   .option('-l, --local', 'run in local mode')
@@ -21,7 +23,26 @@ program
   .option('-P, --platform <platform>', 'platform to test');
 program.parse(process.argv);
 
-global.address = program.address;
+/**
+ * Pass some globals to the tests
+ */
+
+global.init = function() {
+  browser.get(program.address);
+  return protractor.getInstance();
+};
+
+var step = 0;
+var date = Math.floor(Date.now() / 1000);
+global.screenshot = function() {
+  browser.takeScreenshot().then(function(img) {
+    var path = 'test/screenshots/' + date + '/' + (program.platform || 'default') + '/' + (program.browser || 'default') + '/' + (program['browser-version'] || 'default');
+    mkdirp(path, function(err) {
+      if (err) return console.error(err);
+      write(path + '/' + (step++) + '.png', new Buffer(img, 'base64'));
+    });
+  });
+};
 
 runner.addConfig({
   baseUrl: program.address,

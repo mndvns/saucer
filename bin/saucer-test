@@ -43,7 +43,7 @@ function protractor(port) {
   var selport = 4446;
 
   // TODO parse the yaml file
-  var browsers = ['firefox', 'chrome'];
+  var browsers = ['chrome', 'firefox', 'internet explorer'];
 
   var remaining = browsers.length;
   var failures = [];
