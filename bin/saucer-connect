@@ -46,12 +46,12 @@ config.protractor = extend(config.protractor, userConf.protractor);
 
 // check that credentials are present
 
-var user = config.protractor.sauceUser || process.env.SAUCE_USER;
-var key = config.protractor.sauceUser || process.env.SAUCE_KEY;
+var user = config.protractor.sauceUsername || process.env.SAUCE_USERNAME;
+var key = config.protractor.sauceAccessKey || process.env.SAUCE_ACCESS_KEY;
 
-if (!user) out('error'.red, 'No Sauce username found. Please set it at SAUCE_USER');
-if (!key ) out('error'.red, 'No Sauce access key found. Please set it at SAUCE_KEY');
-if (!user || !key) return;
+if (!user) out('error'.red, 'No Sauce username found. Please set it at SAUCE_USERNAME');
+if (!key ) out('error'.red, 'No Sauce access key found. Please set it at SAUCE_ACCESS_KEY');
+if (!user || !key) process.exit(1);
 
 // create the base arguments of our connect command
 

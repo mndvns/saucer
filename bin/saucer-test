@@ -1,0 +1,49 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var program = require('commander');
+var spawn = require('win-fork');
+var out = require('..').out;
+var server = require('../lib/server');
+var join = require('path').join;
+
+program
+  .option('-d, --dev', 'run in development');
+program.parse(process.argv);
+
+var app = server();
+
+exec('install').next(function() {
+  var http = app.listen(0, function() {
+    var port = http.address().port;
+    exec('connect').stdout.on('data', function(d) {
+      if (!~d.toString().indexOf('Connected!')) return;
+      // run protractor
+    });
+  });
+});
+
+// install
+// connect
+// server
+// run tests
+
+function exec(cmd, args) {
+  args = args || [];
+  var bin = join(__dirname, 'saucer-' + cmd);
+  var proc = spawn(bin, args, { stdio: 'pipe', customFds: [0, 1, 2] });
+  proc.on('close', function(code) {
+    if (code === 0) return;
+    process.exit(code);
+  });
+  proc.stdout.on('data', function(d) {
+    console.log('' + d);
+  });
+  proc.next = function(fn) {
+    proc.on('close', fn);
+  };
+  return proc;
+};
