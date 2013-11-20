@@ -11,25 +11,59 @@ var server = require('../lib/server');
 var join = require('path').join;
 
 program
-  .option('-d, --dev', 'run in development');
+  .option('-l, --local', 'run in local mode')
+  .option('-p, --port <port>', 'port to run the server', 5555);
 program.parse(process.argv);
 
 var app = server();
 
+function listen(cb) {
+  app.listen(program.port, function() {
+    cb(program.port);
+  });
+};
+
+if (program.local) return listen(protractor);
+
 exec('install').next(function() {
-  var http = app.listen(0, function() {
-    var port = http.address().port;
-    exec('connect').stdout.on('data', function(d) {
+  listen(function(port) {
+    var connect = exec('connect');
+    connect.stdout.on('data', function(d) {
       if (!~d.toString().indexOf('Connected!')) return;
-      // run protractor
+      protractor(port, function() {
+        connect.kill();
+      });
     });
   });
 });
 
-// install
-// connect
-// server
-// run tests
+function protractor(port) {
+  var bin = join(__dirname, 'saucer-driver');
+  var address = 'http://localhost:' + port;
+  var selport = 4446;
+
+  // TODO parse the yaml file
+  var browsers = ['firefox', 'chrome'];
+
+  var remaining = browsers.length;
+  var failures = [];
+  function end(browser, code) {
+    if (code !== 0) failures.push(browser);
+    remaining--;
+    if (remaining !== 0) return;
+    if (failures.length) process.exit(1);
+    process.exit(0);
+  };
+
+  browsers.forEach(function(browser) {
+    var args = ['--browser', browser, '--address', address, '-p', selport++];
+    if (program.local) args.push('--local');
+    spawn(bin, args, { stdio: 'inherit', customFds: [0, 1, 2] })
+      .on('close', function(code) {
+        end(browser, code);
+      });
+  });
+};
 
 function exec(cmd, args) {
   args = args || [];
@@ -40,6 +74,9 @@ function exec(cmd, args) {
     process.exit(code);
   });
   proc.stdout.on('data', function(d) {
+    console.log('' + d);
+  });
+  proc.stderr.on('data', function(d) {
     console.log('' + d);
   });
   proc.next = function(fn) {

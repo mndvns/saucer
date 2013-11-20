@@ -81,7 +81,7 @@ saucer.watchLog(function() {
 
 // spin up Sauce Connect
 
-var proc = spawn('java', request, {stdio: 'pipe'});
+var proc = spawn('java', request, {stdio: 'pipe', customFds: [0, 1, 2]});
 
 // and handle closing it
 
@@ -102,4 +102,3 @@ proc.on('exit', function(code, signal) {
   if (code > 0) return out('error', 'could not start sauce connect. exit code ' + code);
   return out(msg);
 })
-

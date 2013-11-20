@@ -1,0 +1,67 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var program = require('commander');
+var out = require('..').out;
+var resolve = require('path').resolve;
+var protractor = require('protractor');
+var runner = require('protractor/lib/runner');
+var spawn = require('win-fork');
+var fs = require('fs');
+
+program
+  .option('-l, --local', 'run in local mode')
+  .option('-p, --port <port>', 'selenium port', 4444)
+  .option('-a, --address <address>', 'address of site')
+  .option('-b, --browser <browser>', 'browser name to test')
+  .option('-v, --browser-version <browser-version>', 'browser version to test')
+  .option('-P, --platform <platform>', 'platform to test');
+program.parse(process.argv);
+
+global.address = program.address;
+
+runner.addConfig({
+  baseUrl: program.address,
+  capabilities: {
+    browserName: program.browser,
+    version: program['browser-version'],
+    platform: program.platform
+  },
+  specs: [ 'test/*.test.js' ]
+});
+
+if (!program.local) {
+  runner.addConfig({
+    // TODO make sure these exist in the env
+    sauceUser: process.env.SAUCE_USERNAME,
+    sauceKey: process.env.SAUCE_ACCESS_KEY
+  });
+
+  return run();
+}
+
+var SELENIUM_PATH = resolve(process.cwd(), './selenium/selenium-server-standalone-2.37.0.jar');
+var CHROME_DRIVER_PATH = resolve(process.cwd(), './selenium/chromedriver');
+
+runner.addConfig({
+  seleniumServerJar: SELENIUM_PATH,
+  seleniumPort: program.port,
+  chromeDriver: CHROME_DRIVER_PATH
+});
+
+fs.exists(SELENIUM_PATH, function(exists) {
+  if (exists) return run();
+
+  spawn(resolve(__dirname, '../node_modules/protractor/bin/install_selenium_standalone'), [], { stdio: 'inherit', customFds: [0, 1, 2] })
+    .on('close', function(code) {
+      if (code === 0) return run();
+      process.exit(code);
+    });  
+});
+
+function run() {
+  return runner.runOnce();
+};
