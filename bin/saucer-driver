@@ -23,15 +23,6 @@ program
   .option('-P, --platform <platform>', 'platform to test');
 program.parse(process.argv);
 
-/**
- * Pass some globals to the tests
- */
-
-global.init = function() {
-  browser.get(program.address);
-  return protractor.getInstance();
-};
-
 var step = 0;
 var date = Math.floor(Date.now() / 1000);
 global.screenshot = function() {
@@ -49,9 +40,13 @@ runner.addConfig({
   capabilities: {
     browserName: program.browser,
     version: program['browser-version'],
-    platform: program.platform
+    platform: program.platform,
+    build: process.env.TRAVIS_JOB_ID || date
   },
-  specs: [ 'test/*.test.js' ]
+  specs: [ 'test/*.test.js' ],
+  onPrepare: function() {
+    browser.get(program.address);
+  }
 });
 
 if (!program.local) {
