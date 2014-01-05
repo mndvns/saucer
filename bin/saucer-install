@@ -11,7 +11,6 @@ var http = require('http');
 var AdmZip = require("adm-zip");
 var Progress = require('progress')
 var saucer = require('..');
-var out = saucer.out;
 var join = path.join;
 var resolve = path.resolve;
 
@@ -36,7 +35,7 @@ var jarfile = saucer.paths.jarfile;
 
 if (fs.existsSync(jarfile) && !program.force) return;
 
-out('attempting to connect with saucelabs')
+console.log('attempting to connect with saucelabs')
 var req = { host: 'saucelabs.com', port: 80,
             path: '/downloads/Sauce-Connect-latest.zip' };
 
@@ -49,7 +48,7 @@ if (process.env.NODE_ENV === 'test') {
 // establish connection
 
 http.get(req, function(res) {
-  out('receiving data\n');
+  console.log('receiving data\n');
 
   // get the specs on the file
 
@@ -67,7 +66,7 @@ http.get(req, function(res) {
 
   }).on('end', function() {
     console.log('');
-    out('unpacking zip')
+    console.log('unpacking zip')
     console.log();
 
     // initialize another progress bar and buffer
@@ -96,7 +95,7 @@ http.get(req, function(res) {
 
 process.on('exit', function() {
   console.log();
-  out('success', 'installation complete');
+  console.log('success', 'installation complete');
 
   // cleanup
 

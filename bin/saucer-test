@@ -6,7 +6,6 @@
 
 var program = require('commander');
 var spawn = require('win-fork');
-var out = require('..').out;
 var server = require('../lib/server');
 var join = require('path').join;
 

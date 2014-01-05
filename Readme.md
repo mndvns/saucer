@@ -26,8 +26,9 @@ Via `--help`:
 
     Commands:
 
-      install [flag ...]      install java dependencies
-      connect [flag ...]      connect to selenium server
+      install [option ...]    install java dependencies
+      test [option ...]       connect to selenium server
+      server [option ...]     serve project locally
 ```
 
 

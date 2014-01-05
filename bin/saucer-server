@@ -5,7 +5,6 @@
  */
 
 var program = require('commander');
-var out = require('..').out;
 var server = require('../lib/server');
 var spawn = require('child_process').spawn;
 
@@ -20,7 +19,7 @@ var app = server();
 
 app.listen(program.port, function() {
   var url = 'http://localhost:' + program.port;
-  out('server', 'listening on ' + url);
+  console.log('server', 'listening on ' + url);
   if (program.headless) return;
   spawn('open', [url]);
 });

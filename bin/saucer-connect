@@ -10,7 +10,6 @@ var extend = require('xtend');
 var fs = require('fs');
 var path = require('path');
 var saucer = require('..');
-var out = saucer.out;
 var search = saucer.search;
 var paths = saucer.paths;
 var config = require('../config.js');
@@ -37,8 +36,8 @@ var args = program.args;
 var user = process.env.SAUCE_USERNAME;
 var key = process.env.SAUCE_ACCESS_KEY;
 
-if (!user) out('error'.red, 'No Sauce username found. Please set it at SAUCE_USERNAME');
-if (!key ) out('error'.red, 'No Sauce access key found. Please set it at SAUCE_ACCESS_KEY');
+if (!user) console.error('error', 'No Sauce username found. Please set it at SAUCE_USERNAME');
+if (!key ) console.error('error', 'No Sauce access key found. Please set it at SAUCE_ACCESS_KEY');
 if (!user || !key) process.exit(1);
 
 // create the base arguments of our connect command
@@ -61,10 +60,10 @@ program.options.map(function(opt) {
 
 // TODO
 // find a way for `mocha` to follow spawn processes
-if (process.env.NODE_ENV === 'test') return out('finishing early');
+if (process.env.NODE_ENV === 'test') return console.log('finishing early');
 
 saucer.watchLog(function() {
-  out('Watching ' + saucer.config.sauce.logfile + ' for updates');
+  console.log('Watching ' + saucer.config.sauce.logfile + ' for updates');
 });
 
 // spin up Sauce Connect
@@ -82,11 +81,11 @@ proc.on('exit', function(code, signal) {
   // java exits with a code of 143 on SIGTERM
   if (code === 143) return;
 
-  out('quiting', 'bye for now');
+  console.log('quiting', 'bye for now');
 
   // TODO
   // i should probably get more detailed with these error codes
   var msg = 'closing this tunnel';
-  if (code > 0) return out('error', 'could not start sauce connect. exit code ' + code);
-  return out(msg);
+  if (code > 0) return console.error('error', 'could not start sauce connect. exit code ' + code);
+  return console.log(msg);
 })

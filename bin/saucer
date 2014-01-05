@@ -23,8 +23,9 @@ program
 program.on('--help', function() {
   console.log('  Commands:');
   console.log();
-  console.log('    install [flag ...]      install java dependencies');
-  console.log('    connect [flag ...]      connect to selenium server');
+  console.log('    install [option ...]      install java dependencies');
+  console.log('    test [option ...]         execute tests');
+  console.log('    server [option ...]       serve project locally');
   console.log();
   process.exit();
 });
@@ -57,7 +58,7 @@ if (exists(local)) bin = local;
 // display `saucer` help if executable doesn't exist
 
 if (!exists(bin)) {
-  console.error('%s is not a command', bin)
+  console.error('\'%s\' is not a saucer command', cmd)
   process.exit(1);
 }
 
