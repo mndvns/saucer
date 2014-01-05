@@ -89,3 +89,7 @@ proc.on('exit', function(code, signal) {
   if (code > 0) return console.error('error', 'could not start sauce connect. exit code ' + code);
   return console.log(msg);
 })
+
+process.on('SIGTERM', function() {
+  proc.kill();
+});

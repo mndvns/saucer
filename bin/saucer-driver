@@ -18,24 +18,15 @@ program
   .option('-p, --port <port>', 'selenium port', 4444)
   .option('-a, --address <address>', 'address of site')
   .option('-b, --browser <browser>', 'browser name to test')
-  .option('-v, --browser-version <browser-version>', 'browser version to test')
+  .option('-V, --browserv <browserv>', 'browser version to test')
   .option('-P, --platform <platform>', 'platform to test');
 program.parse(process.argv);
-
-/**
- * Pass some globals to the tests
- */
-
-global.init = function() {
-  browser.get(program.address);
-  return protractor.getInstance();
-};
 
 var step = 0;
 var date = Math.floor(Date.now() / 1000);
 global.screenshot = function() {
   browser.takeScreenshot().then(function(img) {
-    var path = 'test/screenshots/' + date + '/' + (program.platform || 'default') + '/' + (program.browser || 'default') + '/' + (program['browser-version'] || 'default');
+    var path = 'test/screenshots/' + date + '/' + (program.platform || 'default') + '/' + (program.browser || 'default') + '/' + (program.browserv || 'default');
     mkdirp(path, function(err) {
       if (err) return console.error(err);
       write(path + '/' + (step++) + '.png', new Buffer(img, 'base64'));
@@ -47,10 +38,14 @@ runner.addConfig({
   baseUrl: program.address,
   capabilities: {
     browserName: program.browser,
-    version: program['browser-version'],
-    platform: program.platform
+    version: program.browserv,
+    platform: program.platform,
+    build: process.env.TRAVIS_JOB_ID || date
   },
-  specs: [ 'test/*.test.js' ]
+  specs: [ 'test/*.test.js' ],
+  onPrepare: function() {
+    browser.get(program.address);
+  }
 });
 
 if (!program.local) {

@@ -8,6 +8,7 @@ var program = require('commander');
 var spawn = require('win-fork');
 var server = require('../lib/server');
 var join = require('path').join;
+require('js-yaml');
 
 program
   .option('-l, --local', 'run in local mode')
@@ -33,6 +34,9 @@ exec('install').next(function() {
         connect.kill();
       });
     });
+    process.on('exit', function() {
+      connect.kill();
+    });
   });
 });
 
@@ -41,8 +45,7 @@ function protractor(port) {
   var address = 'http://localhost:' + port;
   var selport = 4446;
 
-  // TODO parse the yaml file
-  var browsers = ['chrome', 'firefox', 'internet explorer'];
+  var browsers = expand(require(join(process.cwd(), '.saucer.yml')));
 
   var remaining = browsers.length;
   var failures = [];
@@ -55,12 +58,22 @@ function protractor(port) {
   };
 
   browsers.forEach(function(browser) {
-    var args = ['--browser', browser, '--address', address, '-p', selport++];
+    var args = ['--browser', browser.name, '--address', address, '-p', selport++];
     if (program.local) args.push('--local');
-    spawn(bin, args, { stdio: 'inherit', customFds: [0, 1, 2] })
-      .on('close', function(code) {
-        end(browser, code);
-      });
+    if (browser.version) args = args.concat(['--browserv', browser.version]);
+    if (browser.platform) args = args.concat(['--platform', browser.platform]);
+
+    var proc = spawn(bin, args, { stdio: 'pipe', customFds: [0, 1, 2] });
+
+    proc.on('close', function(code) {
+      end(browser, code);
+    });
+    proc.stdout.on('data', function(d) {
+      process.stdout.write(('' + d).replace(process.env.SAUCE_ACCESS_KEY, '****'));
+    });
+    proc.stderr.on('data', function(d) {
+      process.stdout.write('' + d);
+    });
   });
 };
 
@@ -73,13 +86,51 @@ function exec(cmd, args) {
     process.exit(code);
   });
   proc.stdout.on('data', function(d) {
-    console.log('' + d);
+    process.stdout.write(('' + d).replace(process.env.SAUCE_ACCESS_KEY, '****'));
   });
   proc.stderr.on('data', function(d) {
-    console.log('' + d);
+    process.stdout.write('' + d);
   });
   proc.next = function(fn) {
     proc.on('close', fn);
   };
   return proc;
+};
+
+function expand(platforms) {
+  var browsers = [];
+  Object.keys(platforms).forEach(function(platform) {
+    platforms[platform].forEach(function(bv) {
+      var browser = bv.split(' ');
+
+      var name = browser[0].toLowerCase();
+      if (name === 'ie') name = 'internet explorer';
+
+      if (!browser[1]) return browsers.push({
+        platform: platform,
+        name: name
+      });
+
+      // TODO expand the version number
+      var version = (browser[1] || '').split('-');
+
+      if (version.length === 1) return browsers.push({
+        platform: platform,
+        name: name,
+        version: version[0]
+      });
+
+      var start = parseInt(version[0], 10);
+      var end = parseInt(version[1], 10);
+      for(var i = start; i <= end; i++) {
+        browsers.push({
+          platform: platform,
+          name: name,
+          version: '' + i
+        });
+      }
+    });
+  });
+
+  return browsers;
 };
